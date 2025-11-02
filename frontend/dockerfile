@@ -1,0 +1,18 @@
+FROM node:20
+
+WORKDIR /app
+
+# package.jsonとpackage-lock.jsonをコピー
+COPY package*.json ./
+
+# npmのキャッシュをクリアして、プラットフォーム固有の依存関係を再インストール
+RUN npm cache clean --force
+RUN npm install --force
+
+# ソースコードをコピー
+COPY . .
+
+EXPOSE 5173
+
+# 開発サーバーを起動（ホストを0.0.0.0に設定してコンテナ外からアクセス可能にする）
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]

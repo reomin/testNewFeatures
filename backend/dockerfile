@@ -1,0 +1,10 @@
+FROM php:8.3-apache
+
+# PDOなどの拡張を追加
+RUN docker-php-ext-install pdo pdo_mysql
+
+# Apache設定
+COPY ./ /var/www/html
+WORKDIR /var/www/html
+
+EXPOSE 80 
