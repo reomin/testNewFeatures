@@ -6,7 +6,11 @@
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "capture": "node capture-screenshots.js",
+    "vrt:init": "npm run capture && npx reg-suit sync-expected",
+    "vrt:run": "npm run capture && npx reg-suit compare",
+    "vrt:approve": "npx reg-suit sync-expected"
   },
   "keywords": [],
   "author": "",
@@ -18,5 +22,9 @@
     "react-router": "^7.9.5",
     "react-router-dom": "^7.9.5",
     "vite": "^7.1.12"
+  },
+  "devDependencies": {
+    "puppeteer": "^24.27.0",
+    "reg-suit": "^0.14.5"
   }
 }

@@ -5,7 +5,7 @@ import Todos from './todos.jsx'
 function Home() {
   return (
     <div style={{ padding: '20px', textAlign: "center" }}>
-      <h1>This is Todo App Frontend</h1>
+      <h1>This is Todo App</h1>
       <p>Reactアプリケーションが正常に動作しています</p>
       <div className="h1-container">
         <form action="http://localhost:8080/todos.php" method="post">

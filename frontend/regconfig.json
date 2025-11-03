@@ -1,0 +1,18 @@
+{
+  "core": {
+    "workingDir": ".reg",
+    "actualDir": "screenshots",
+    "expectedDir": "expected",
+    "diffDir": "diff",
+    "report": {
+      "json": "report.json",
+      "html": "report.html"
+    },
+    "threshold": 0.05,
+    "enabledParallel": false,
+    "enabledMetrics": false
+  },
+  "plugins": {
+    "reg-keygen-git-hash-plugin": true
+  }
+}
