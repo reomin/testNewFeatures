@@ -48,7 +48,7 @@ function Todo({ todo, onToggle }) {
         }}>
             <h3>{todo.title}</h3>
             <p>{todo.description}</p>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', justifyContent: 'right', alignItems: 'center', gap: '10px' }}>
                 <label>
                     <input
                         type="checkbox"
