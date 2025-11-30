@@ -5,10 +5,12 @@ WORKDIR /app
 # package.jsonとpackage-lock.jsonをコピー
 COPY package*.json ./
 
-# npmのキャッシュをクリアして、プラットフォーム固有の依存関係を再インストール
+# Clear npm cache and ensure clean install
 RUN npm cache clean --force
 RUN rm -rf node_modules package-lock.json
-RUN npm install --force --no-optional
+
+# Install dependencies with CI-friendly settings
+RUN npm install --force --legacy-peer-deps
 
 # ソースコードをコピー
 COPY . .
