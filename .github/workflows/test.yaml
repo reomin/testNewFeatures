@@ -30,6 +30,14 @@ jobs:
       - name: Validate infrastructure
         run: |
           goss validate --format json | tee goss-results.json
+          
+          # Debug: Check service status
+          echo "=== Container Status ==="
+          docker compose ps
+          echo "=== Port Bindings ==="
+          docker compose port frontend 5173 || echo "Frontend port binding failed"
+          echo "=== Network Test ==="
+          curl -v http://localhost:5173 || echo "Direct curl failed"
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -45,6 +53,11 @@ jobs:
 
       - name: Run E2E tests
         run: |
+          # Final debug before E2E tests
+          echo "=== Final Service Check ==="
+          docker compose logs frontend | tail -20
+          netstat -tulpn | grep :5173 || echo "Port 5173 not listening"
+          
           cd frontend
           npm run test:e2e
         env:
