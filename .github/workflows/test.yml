@@ -16,7 +16,7 @@ jobs:
 
       - name: Start services with Docker Compose
         run: |
-          docker-compose up -d
+          docker compose up -d
           echo "Waiting for services to be ready..."
           sleep 30
 
@@ -30,7 +30,11 @@ jobs:
         run: |
           echo "Waiting additional time for all services to initialize..."
           sleep 60
-          docker-compose ps
+          docker compose ps
+
+          # Initialize Elasticsearch
+          echo "Initializing Elasticsearch..."
+          docker compose exec -T app php init-elasticsearch.php || echo "Elasticsearch already initialized"
 
       - name: Validate infrastructure with Goss
         run: |
@@ -51,15 +55,15 @@ jobs:
         if: failure()
         run: |
           echo "=== Docker Compose Status ==="
-          docker-compose ps
+          docker compose ps
           echo "=== App Container Logs ==="
-          docker-compose logs app
+          docker compose logs app
           echo "=== Database Container Logs ==="
-          docker-compose logs db
+          docker compose logs db
           echo "=== Elasticsearch Container Logs ==="
-          docker-compose logs elasticsearch
+          docker compose logs elasticsearch
           echo "=== Redis Container Logs ==="
-          docker-compose logs redis
+          docker compose logs redis
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -97,4 +101,4 @@ jobs:
       - name: Cleanup
         if: always()
         run: |
-          docker-compose down -v
+          docker compose down -v
