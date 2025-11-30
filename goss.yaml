@@ -1,0 +1,60 @@
+# goss.yaml
+# E2Eテスト前の環境検証用設定
+# 各サービスのAPI正常性、データベース動作確認を実施
+
+# HTTPエンドポイントの確認
+http:
+  http://localhost:9200/_cluster/health:
+    status: 200
+    timeout: 10000
+    body:
+      - '"status":"green"'
+      - '"status":"yellow"'
+
+  http://localhost:8080/health.php:
+    status: 200
+    timeout: 5000
+    body:
+      - '"status":"healthy"'
+
+  http://localhost:8080/todosGet.php:
+    status: 200
+    timeout: 5000
+    headers:
+      Content-Type: "application/json"
+
+  http://localhost:5173:
+    status: 200
+    timeout: 5000
+
+# コマンドベースの確認
+command:
+  # Test MySQL connectivity
+  mysql-connection:
+    exec: "docker exec mysql-db mysql -u user -ppassword -e 'SELECT 1'"
+    exit-status: 0
+    timeout: 10000
+
+  # Test Redis connectivity
+  redis-ping:
+    exec: "docker exec redis redis-cli ping"
+    exit-status: 0
+    timeout: 5000
+    stdout:
+      - "PONG"
+
+  # Test that backend can connect to Redis
+  backend-redis-test:
+    exec: 'docker exec php-app php -r ''try { $redis = new Redis(); $redis->connect("redis", 6379); echo "Redis connection: OK"; } catch (Exception $e) { echo "Redis error: " . $e->getMessage(); exit(1); }'''
+    exit-status: 0
+    timeout: 10000
+    stdout:
+      - "Redis connection: OK"
+
+  # Test that backend can connect to Elasticsearch
+  backend-elasticsearch-test:
+    exec: 'docker exec php-app php -r ''try { $ch = curl_init("http://elasticsearch:9200"); curl_setopt($ch, CURLOPT_RETURNTRANSFER, true); $result = curl_exec($ch); $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE); curl_close($ch); if ($httpCode == 200) echo "Elasticsearch connection: OK"; else throw new Exception("HTTP $httpCode"); } catch (Exception $e) { echo "Elasticsearch error: " . $e->getMessage(); exit(1); }'''
+    exit-status: 0
+    timeout: 10000
+    stdout:
+      - "Elasticsearch connection: OK"

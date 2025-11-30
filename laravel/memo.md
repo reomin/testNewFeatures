@@ -1,2 +1,0 @@
-/tddスタイルで開発する時に便利
-spatie/phpunit-watcher

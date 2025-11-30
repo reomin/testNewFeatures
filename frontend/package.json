@@ -10,7 +10,10 @@
     "capture": "node capture-screenshots.js",
     "vrt:init": "npm run capture && npx reg-suit sync-expected",
     "vrt:run": "npm run capture && npx reg-suit compare",
-    "vrt:approve": "npx reg-suit sync-expected"
+    "vrt:approve": "npx reg-suit sync-expected",
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:ui": "playwright test --ui"
   },
   "keywords": [],
   "author": "",
@@ -24,6 +27,7 @@
     "vite": "^7.1.12"
   },
   "devDependencies": {
+    "@playwright/test": "^1.57.0",
     "puppeteer": "^24.27.0",
     "reg-suit": "^0.14.5"
   }

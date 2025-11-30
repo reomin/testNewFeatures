@@ -6,8 +6,8 @@ function Detail() {
     const [error, setError] = useState(null);
 
     useEffect(() => {
-        const urlParams = new URLSearchParams(window.location.search);
-        const id = urlParams.get('id');
+        const hash = window.location.hash.slice(1);
+        const id = hash.startsWith('detail') ? new URLSearchParams(window.location.search).get('id') || hash.replace('detail', '') : null;
 
         if (id) {
             fetchTodoDetail(id);
