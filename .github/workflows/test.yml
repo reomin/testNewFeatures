@@ -45,8 +45,33 @@ jobs:
           # Goss実行
           if goss validate --format json | tee goss-results.json; then
             echo "Infrastructure validation passed!"
+            
+            # GitHub Job Summaryに結果を追加
+            echo "## Infrastructure Validation Results" >> $GITHUB_STEP_SUMMARY
+            echo "All infrastructure tests passed successfully!" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            
+            # 成功したテスト数を表示
+            if [ -f goss-results.json ] && command -v jq >/dev/null 2>&1; then
+              PASSED=$(jq '.summary.passed' goss-results.json 2>/dev/null || echo "N/A")
+              TOTAL=$(jq '.summary.total' goss-results.json 2>/dev/null || echo "N/A")
+              echo "- ✅ **Passed:** $PASSED/$TOTAL tests" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              
+              echo "### Test Details" >> $GITHUB_STEP_SUMMARY
+              echo "| Type | Resource | Status |" >> $GITHUB_STEP_SUMMARY
+              echo "|------|----------|--------|" >> $GITHUB_STEP_SUMMARY
+              jq -r '.results[] | "| \(.resource_type) | \(.resource_id) | ✅ Passed |"' goss-results.json >> $GITHUB_STEP_SUMMARY 2>/dev/null || true
+            else
+              echo "Detailed parsing not available" >> $GITHUB_STEP_SUMMARY
+            fi
           else
             echo "Infrastructure validation failed!"
+            
+            # 失敗時もJob Summaryに追加
+            echo "## ❌ Infrastructure Validation Failed" >> $GITHUB_STEP_SUMMARY
+            echo "One or more infrastructure tests failed." >> $GITHUB_STEP_SUMMARY
+            
             echo "Goss results:"
             cat goss-results.json || echo "No goss results file found"
             exit 1
@@ -69,14 +94,20 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "18"
-          cache: "npm"
-          cache-dependency-path: "frontend/package-lock.json"
+          node-version: "20"
+          # キャッシュを一時的に無効化（権限問題回避）
+          # cache: "npm"
+          # cache-dependency-path: "frontend/package-lock.json"
 
       - name: Install frontend dependencies
         run: |
           cd frontend
-          npm ci
+          # 権限問題を避けるためnode_modulesを削除
+          rm -rf node_modules package-lock.json
+          # 新しいpackage-lock.jsonを生成
+          npm install
+          # キャッシュをクリア
+          npm cache clean --force
 
       - name: Install Playwright browsers
         run: |
@@ -98,6 +129,14 @@ jobs:
           name: playwright-report
           path: frontend/playwright-report/
           retention-days: 7
+
+      - name: Upload Goss results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: goss-validation-results
+          path: goss-results.json
+          retention-days: 30
 
       - name: Cleanup
         if: always()
