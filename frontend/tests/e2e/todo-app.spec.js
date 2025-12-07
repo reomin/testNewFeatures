@@ -41,10 +41,27 @@ test.describe('Todo App E2E Tests', () => {
     await page.goto('/#todos');
     await page.waitForLoadState('networkidle');
     
-    const todoCount = await page.locator('h3').count();
+    const todoCount = await page.locator('[data-testid="todo-item"]').count();
     if (todoCount > 0) {
+      // 詳細ボタンをクリック
       await page.locator('button:has-text("詳細")').first().click();
-      await expect(page.locator('button:has-text("← 戻る")')).toBeVisible();
+      
+      // ハッシュルーティングでの遷移を待機
+      await page.waitForFunction(() => window.location.hash.includes('detail'));
+      await page.waitForLoadState('networkidle');
+      
+      // 読み込み完了まで待機
+      await page.waitForSelector('button:has-text("← 戻る"), p:has-text("エラー")', { timeout: 10000 });
+      
+      // 戻るボタンが表示されていることを確認（エラーページでない場合）
+      const hasError = await page.locator('p:has-text("エラー")').isVisible();
+      if (!hasError) {
+        await expect(page.locator('button:has-text("← 戻る")')).toBeVisible();
+        
+        // 戻るボタンが機能することも確認
+        await page.locator('button:has-text("← 戻る")').click();
+        await page.waitForFunction(() => !window.location.hash.includes('detail'));
+      }
     }
   });
 

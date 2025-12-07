@@ -30,38 +30,7 @@ jobs:
 
       - name: Validate infrastructure
         run: |
-          # Check frontend container status first
-          echo "=== Frontend Container Check ==="
-          docker compose ps frontend
-          docker compose logs frontend || echo "No frontend logs available"
-
-          # If frontend is not running, try to restart it
-          if ! docker compose ps frontend | grep -q "Up"; then
-            echo "Frontend container not running, attempting restart..."
-            docker compose stop frontend || true
-            docker compose build --no-cache frontend
-            docker compose up -d frontend
-            sleep 60
-            echo "Frontend restart attempt completed"
-            docker compose ps frontend
-            docker compose logs frontend
-            
-            # If still not running, fail the job
-            if ! docker compose ps frontend | grep -q "Up"; then
-              echo "Frontend container failed to start after rebuild"
-              exit 1
-            fi
-          fi
-
           goss validate --format json | tee goss-results.json
-
-          # Debug: Check service status
-          echo "=== Container Status ==="
-          docker compose ps
-          echo "=== Port Bindings ==="
-          docker compose port frontend 5173 || echo "Frontend port binding failed"
-          echo "=== Network Test ==="
-          curl -v http://localhost:5173 || echo "Direct curl failed"
 
       - name: Setup Node.js
         uses: actions/setup-node@v4

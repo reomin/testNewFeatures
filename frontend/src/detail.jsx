@@ -6,8 +6,9 @@ function Detail() {
     const [error, setError] = useState(null);
 
     useEffect(() => {
-        const hash = window.location.hash.slice(1);
-        const id = hash.startsWith('detail') ? new URLSearchParams(window.location.search).get('id') || hash.replace('detail', '') : null;
+        const hash = window.location.hash.slice(1); // #を除去
+        const urlParams = new URLSearchParams(hash.split('?')[1] || ''); // detail?id=123の?以降を取得
+        const id = urlParams.get('id');
 
         if (id) {
             fetchTodoDetail(id);

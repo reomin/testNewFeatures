@@ -1,8 +1,6 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 
 function Todo({ todo, onToggle }) {
-    const navigate = useNavigate();
     
     const handleChange = () => {
         if (onToggle) {
@@ -11,7 +9,7 @@ function Todo({ todo, onToggle }) {
     };
 
     const handleDetailClick = () => {
-        navigate(`/detail?id=${todo.id}`);
+        window.location.hash = `detail?id=${todo.id}`;
     };
 
     const handleDeleteClick = async (id) => {
