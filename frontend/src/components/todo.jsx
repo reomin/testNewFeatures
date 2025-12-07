@@ -1,8 +1,6 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 
 function Todo({ todo, onToggle }) {
-    const navigate = useNavigate();
     
     const handleChange = () => {
         if (onToggle) {
@@ -11,7 +9,7 @@ function Todo({ todo, onToggle }) {
     };
 
     const handleDetailClick = () => {
-        navigate(`/detail?id=${todo.id}`);
+        window.location.hash = `detail?id=${todo.id}`;
     };
 
     const handleDeleteClick = async (id) => {
@@ -39,16 +37,18 @@ function Todo({ todo, onToggle }) {
     };
 
     return (
-        <div style={{
-            border: '1px solid #ccc',
-            borderRadius: '5px',
-            padding: '10px',
-            marginBottom: '10px',
-            backgroundColor: todo.completed ? '#e0ffe0' : '#fff'
-        }}>
+        <div
+            data-testid="todo-item"
+            style={{
+                border: '1px solid #ccc',
+                borderRadius: '5px',
+                padding: '10px',
+                marginBottom: '10px',
+                backgroundColor: todo.completed ? '#e0ffe0' : '#fff'
+            }}>
             <h3>{todo.title}</h3>
             <p>{todo.description}</p>
-            <div style={{ display: 'flex', justifyContent: 'right', alignItems: 'center', gap: '10px' }}>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '10px' }}>
                 <label>
                     <input
                         type="checkbox"

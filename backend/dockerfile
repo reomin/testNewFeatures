@@ -1,10 +1,24 @@
 FROM php:8.3-apache
 
-# PDOなどの拡張を追加
-RUN docker-php-ext-install pdo pdo_mysql
+# パッケージの更新とPHP拡張のインストールを一度に実行
+RUN apt-get update && \
+    apt-get install -y default-mysql-client libcurl4-openssl-dev && \
+    docker-php-ext-install pdo pdo_mysql curl && \
+    pecl install redis && \
+    docker-php-ext-enable redis && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
-# Apache設定
+# Apache DocumentRootを設定
+ENV APACHE_DOCUMENT_ROOT /var/www/html
+RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
+RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
+
+# アプリケーションファイルをコピー
 COPY ./ /var/www/html
 WORKDIR /var/www/html
+
+# 権限設定
+RUN chown -R www-data:www-data /var/www/html
 
 EXPOSE 80 

@@ -11,48 +11,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
-$dsn = "mysql:host=db;dbname=todo_app;charset=utf8mb4";
-$username = "user";
-$password = "password";
-$driver_options = [
-    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-];
+require_once 'services.php';
 
-$pdo = new PDO($dsn, $username, $password, $driver_options);
+try {
+    $redis = new RedisCache();
 
-// データベースの追加
-$stmt = $pdo->prepare("SELECT * FROM todos");
-$stmt->execute();
+    // キャッシュから取得を試す
+    $todos = $redis->get('todos_list');
 
-$todos = $stmt->fetchAll();
+    if ($todos === false) {
+        // キャッシュにない場合はデータベースから取得
+        $dsn = "mysql:host=db;dbname=todo_app;charset=utf8mb4";
+        $username = "user";
+        $password = "password";
+        $driver_options = [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+        ];
 
-// サンプルのTodoデータ（実際のアプリケーションではデータベースから取得）
-// $sampleTodos = [
-//     [
-//         'id' => 1,
-//         'title' => 'サンプルタスク1',
-//         'description' => 'これは最初のサンプルタスクです。',
-//         'completed' => false,
-//         'created_at' => '2024-01-01 10:00:00',
-//         'updated_at' => '2024-01-01 10:00:00'
-//     ],
-//     [
-//         'id' => 2,
-//         'title' => 'サンプルタスク2',
-//         'description' => 'これは完了済みのサンプルタスクです。',
-//         'completed' => true,
-//         'created_at' => '2024-01-02 14:30:00',
-//         'updated_at' => '2024-01-03 16:45:00'
-//     ],
-//     [
-//         'id' => 3,
-//         'title' => '長いタイトルのサンプルタスク',
-//         'description' => 'これは説明文が長いサンプルタスクです。複数行にわたる詳細な説明があります。',
-//         'completed' => false,
-//         'created_at' => '2024-01-03 09:15:00',
-//         'updated_at' => '2024-01-03 09:15:00'
-//     ]
-// ];
+        $pdo = new PDO($dsn, $username, $password, $driver_options);
+        $stmt = $pdo->prepare("SELECT * FROM todos ORDER BY created_at DESC");
+        $stmt->execute();
+        $todos = $stmt->fetchAll();
 
-echo json_encode($todos);
+        // データをキャッシュに保存（5分間）
+        $redis->set('todos_list', $todos, 300);
+    }
+
+    echo json_encode($todos);
+} catch (Exception $e) {
+    // Redisが利用できない場合はDBから直接取得
+    $dsn = "mysql:host=db;dbname=todo_app;charset=utf8mb4";
+    $username = "user";
+    $password = "password";
+    $driver_options = [
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+    ];
+
+    $pdo = new PDO($dsn, $username, $password, $driver_options);
+    $stmt = $pdo->prepare("SELECT * FROM todos ORDER BY created_at DESC");
+    $stmt->execute();
+    $todos = $stmt->fetchAll();
+
+    echo json_encode($todos);
+}

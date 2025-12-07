@@ -6,7 +6,8 @@ function Detail() {
     const [error, setError] = useState(null);
 
     useEffect(() => {
-        const urlParams = new URLSearchParams(window.location.search);
+        const hash = window.location.hash.slice(1); // #を除去
+        const urlParams = new URLSearchParams(hash.split('?')[1] || ''); // detail?id=123の?以降を取得
         const id = urlParams.get('id');
 
         if (id) {

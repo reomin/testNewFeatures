@@ -10,7 +10,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
-//ここにphpのapiを書く
+require_once 'services.php';
 
 $title = $_POST["title"];
 $description = $_POST["description"];
@@ -25,11 +25,33 @@ $driver_options = [
 
 $pdo = new PDO($dsn, $username, $password, $driver_options);
 
-// データベースの追加
+// データベースに追加
 $stmt = $pdo->prepare("INSERT INTO todos (title, description) VALUES (:title, :description)");
 $stmt->bindParam(":title", $title);
 $stmt->bindParam(":description", $description);
 $stmt->execute();
+
+$todoId = $pdo->lastInsertId();
+
+// 作成されたTodoの詳細を取得
+$stmt = $pdo->prepare("SELECT * FROM todos WHERE id = :id");
+$stmt->bindParam(":id", $todoId);
+$stmt->execute();
+$newTodo = $stmt->fetch();
+
+try {
+    // Redisキャッシュをクリア
+    $redis = new RedisCache();
+    $redis->delete('todos_list');
+
+    // Elasticsearchにインデックス（completed フィールドをbooleanに変換）
+    $newTodo['completed'] = (bool)$newTodo['completed'];
+    $elasticsearch = new ElasticsearchClient();
+    $elasticsearch->indexTodo($todoId, $newTodo);
+} catch (Exception $e) {
+    // サービスが利用できない場合は無視して続行
+    error_log("Cache/Search service error: " . $e->getMessage());
+}
 
 //元の画面に戻す
 header("Location: http://localhost:5173");

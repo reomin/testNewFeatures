@@ -11,6 +11,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
+require_once 'services.php';
+
 // DELETEリクエストのJSON bodyを取得
 $input = file_get_contents('php://input');
 $data = json_decode($input, true);
@@ -42,6 +44,19 @@ try {
 
     // 削除されたレコード数を確認
     if ($stmt->rowCount() > 0) {
+        try {
+            // Redisキャッシュをクリア
+            $redis = new RedisCache();
+            $redis->delete('todos_list');
+
+            // Elasticsearchから削除
+            $elasticsearch = new ElasticsearchClient();
+            $elasticsearch->deleteTodo($id);
+        } catch (Exception $e) {
+            // サービスが利用できない場合は無視して続行
+            error_log("Cache/Search service error: " . $e->getMessage());
+        }
+
         http_response_code(200);
         echo json_encode(['success' => true, 'message' => 'Todoが削除されました']);
     } else {
